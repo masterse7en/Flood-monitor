@@ -1,0 +1,21 @@
+# Secrets
+secrets.h
+.env
+*.pem
+*.key
+
+# Arduino build output
+build/
+*.bin
+*.elf
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
