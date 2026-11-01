@@ -5,14 +5,40 @@ and camera, reporting to a serverless AWS backend.
 
 ## Architecture
 
-```
-ESP32-S3 + JSN-SR04T + OV3660
-   |  HTTPS + x-device-key
-   |-- reading --> Lambda flood_ingest --> DynamoDB FloodReadings
-   |                         |
-   |                         +--> SNS flood-alerts --> email (on state change)
-   |
-   +-- photo ----> Lambda flood_photo_upload --> S3 bucket
+```mermaid
+flowchart LR
+    subgraph FIELD["📍 Field node · Kozhikode"]
+        SUN["☀️ Solar panel 6 V"] --> BAT["🔋 2× 18650 + TP4056"]
+        BAT --> ESP["ESP32-S3 N16R8"]
+        SONAR["📏 JSN-SR04T<br/>water distance"] --> ESP
+        CAM["📷 OV3660<br/>target photos"] --> ESP
+    end
+
+    subgraph AWS["☁️ AWS · us-east-1"]
+        INGEST["λ flood_ingest"]
+        PHOTO["λ flood_photo_upload"]
+        DDB[("DynamoDB<br/>FloodReadings")]
+        SNS["SNS<br/>flood-alerts"]
+        S3[("S3<br/>photo bucket")]
+        INGEST -->|"every reading"| DDB
+        INGEST -->|"state change"| SNS
+        PHOTO --> S3
+    end
+
+    ESP -->|"HTTPS · reading JSON<br/>x-device-key"| INGEST
+    ESP -->|"HTTPS · JPEG<br/>x-device-key"| PHOTO
+    SNS --> MAIL["📧 Email alert"]
+
+    classDef device fill:#1f6feb,stroke:#58a6ff,color:#fff
+    classDef power fill:#9e6a03,stroke:#d29922,color:#fff
+    classDef lambda fill:#d97706,stroke:#f59e0b,color:#fff
+    classDef store fill:#238636,stroke:#3fb950,color:#fff
+    classDef alert fill:#a40e26,stroke:#f85149,color:#fff
+    class ESP,SONAR,CAM device
+    class SUN,BAT power
+    class INGEST,PHOTO lambda
+    class DDB,S3 store
+    class SNS,MAIL alert
 ```
 
 ## Phases
